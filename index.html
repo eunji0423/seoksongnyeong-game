@@ -10,7 +10,7 @@
 
   <div id="gameViewport">
 
-    <!-- 0. 리소스 로딩 화면 (신규 추가) -->
+    <!-- 0. 리소스 로딩 화면 -->
     <div id="loadingScreen">
       <div class="loading-box">
         <div class="loading-spinner"></div>
@@ -90,74 +90,6 @@
   </div>
     
   <script>
-    function preloadAllAssets() {
-      const imagesToLoad = [
-        ASSETS.bgForest,
-        ASSETS.bgOffice,
-        ASSETS.eventCollapse,
-        ASSETS.itemPlaque,
-        ASSETS.eventAwaken,
-        ASSETS.eventAlarm,
-        ASSETS.ch1Attack,
-        ASSETS.ch1Dodge,
-        ASSETS.ch2Talchum,
-        ASSETS.ch2Boxing,
-        ASSETS.ch3Strike,
-        ASSETS.ch3Shuriken,
-        ASSETS.mentor,
-        ASSETS.senior,
-        ASSETS.monster,
-        ASSETS.monster_boss
-      ].filter(Boolean); // 유효한 경로만 필터링
-
-      let loadedCount = 0;
-      const totalImages = imagesToLoad.length;
-      const loadingScreen = document.getElementById("loadingScreen");
-      const loadingBar = document.getElementById("loadingBar");
-      const loadingProgress = document.getElementById("loadingProgress");
-      const titleScreen = document.getElementById("titleScreen");
-
-      function updateProgress() {
-        loadedCount++;
-        const percent = Math.floor((loadedCount / totalImages) * 100);
-        if (loadingBar) loadingBar.style.width = percent + "%";
-        if (loadingProgress) loadingProgress.innerText = percent + "%";
-
-        // 전체 다운로드 완료 시 로딩 화면 닫고 타이틀 화면 등장
-        if (loadedCount >= totalImages) {
-          setTimeout(() => {
-            if (loadingScreen) {
-              loadingScreen.style.opacity = "0";
-              setTimeout(() => {
-                loadingScreen.style.display = "none";
-                if (titleScreen) {
-                  titleScreen.style.display = "flex";
-                  setTimeout(() => {
-                    titleScreen.style.opacity = "1";
-                  }, 50);
-                }
-              }, 400);
-            }
-          }, 300);
-        }
-      }
-
-      // 각 이미지를 백그라운드에서 다운로드
-      imagesToLoad.forEach(src => {
-        const img = new Image();
-        img.onload = updateProgress;
-        img.onerror = () => {
-          console.warn(`[에셋 로드 실패 또는 누락]: ${src}`);
-          updateProgress(); // 파일이 없더라도 게임이 멈추지 않도록 카운트 진행
-        };
-        img.src = src;
-      });
-    }
-
-    // 페이지 진입 즉시 로딩 시작
-    window.addEventListener("DOMContentLoaded", preloadAllAssets);
-
-
     let playerName = "홍길동";
     let spiritPoints = 0;
     let stepIndex = 0;
@@ -216,7 +148,70 @@
       monsterBoss: "monster_boss.png"
     };
 
-    // 이미지 로드 시 엑스박스/멈춤 방지 함수
+    function preloadAllAssets() {
+      const imagesToLoad = [
+        ASSETS.bgForest,
+        ASSETS.bgOffice,
+        ASSETS.eventCollapse,
+        ASSETS.itemPlaque,
+        ASSETS.eventAwaken,
+        ASSETS.eventAlarm,
+        ASSETS.ch1Attack,
+        ASSETS.ch1Dodge,
+        ASSETS.ch2Talchum,
+        ASSETS.ch2Boxing,
+        ASSETS.ch3Strike,
+        ASSETS.ch3Shuriken,
+        ASSETS.mentor,
+        ASSETS.senior,
+        ASSETS.monster,
+        ASSETS.monsterBoss
+      ].filter(Boolean);
+
+      let loadedCount = 0;
+      const totalImages = imagesToLoad.length;
+      const loadingScreen = document.getElementById("loadingScreen");
+      const loadingBar = document.getElementById("loadingBar");
+      const loadingProgress = document.getElementById("loadingProgress");
+      const titleScreen = document.getElementById("titleScreen");
+
+      function updateProgress() {
+        loadedCount++;
+        const percent = Math.floor((loadedCount / totalImages) * 100);
+        if (loadingBar) loadingBar.style.width = percent + "%";
+        if (loadingProgress) loadingProgress.innerText = percent + "%";
+
+        if (loadedCount >= totalImages) {
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.style.opacity = "0";
+              setTimeout(() => {
+                loadingScreen.style.display = "none";
+                if (titleScreen) {
+                  titleScreen.style.display = "flex";
+                  setTimeout(() => {
+                    titleScreen.style.opacity = "1";
+                  }, 50);
+                }
+              }, 400);
+            }
+          }, 300);
+        }
+      }
+
+      imagesToLoad.forEach(src => {
+        const img = new Image();
+        img.onload = updateProgress;
+        img.onerror = () => {
+          console.warn(`[에셋 로드 실패 또는 누락]: ${src}`);
+          updateProgress();
+        };
+        img.src = src;
+      });
+    }
+
+    window.addEventListener("DOMContentLoaded", preloadAllAssets);
+
     function setSafeBackground(elementId, imgUrl) {
       const el = document.getElementById(elementId);
       if (!el || !imgUrl) return;
@@ -231,7 +226,6 @@
       };
     }
 
-    // 연출 스크립트 (getter 프로퍼티 사용으로 실행 시점 최신 이미지 적용)
     function generateScript() {
       return [
         {
@@ -310,7 +304,7 @@
         {
           bg: () => ASSETS.bgOffice,
           loc: "향토사 연구실",
-          speaker: "16기 선배 (수홍))",
+          speaker: "16기 선배 (수홍)",
           portrait: ASSETS.senior,
           text: "말보단 스파링이지! 자, 주술 부채 칼바람 날아간다! 어디 한번 제대로 받아쳐 봐!"
         },
@@ -491,8 +485,6 @@
             document.getElementById("charPortrait").style.display = "none";
             document.getElementById("speakerTag").innerText = "판정 결과";
             document.getElementById("dialogueText").innerText = typeof ch.resultText === "function" ? ch.resultText() : ch.resultText;
-
-            // ❌ 기존: stepIndex++;  <-- 이 줄을 삭제하거나 주석 처리하세요!
           };
           choicesBox.appendChild(btn);
         });
@@ -518,8 +510,16 @@
       if (item.portrait) {
         portraitImg.src = item.portrait;
         portraitImg.style.display = "block";
+
+        // 몬스터 또는 보스일 경우 거대화 스타일 적용
+        if (item.portrait.includes("monster")) {
+          portraitImg.classList.add("monster-scale");
+        } else {
+          portraitImg.classList.remove("monster-scale");
+        }
       } else {
         portraitImg.style.display = "none";
+        portraitImg.classList.remove("monster-scale");
       }
     }
 
@@ -531,7 +531,6 @@
       }
     }
 
-    // 입력받은 이름의 길이에 따라 한글 수사를 반환하는 함수
     function getKoreanCountWord(count) {
       const words = ["영", "한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열"];
       return words[count] ? `${words[count]} 글자` : `${count}글자`;
@@ -543,7 +542,6 @@
       document.getElementById("charPortrait").style.display = "none";
       setSafeBackground("sceneBg", ASSETS.itemPlaque);
 
-      // 💡 공백을 제외한 순수 글자 수를 계산해 "두 글자", "세 글자" 등으로 변환
       const nameLength = playerName.replace(/\s+/g, "").length;
       const countText = getKoreanCountWord(nameLength);
 
