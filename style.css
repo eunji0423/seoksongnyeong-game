@@ -1,0 +1,487 @@
+:root {
+  --pine-green: #10b981;
+  --pine-glow: #34d399;
+  --pine-dark: #064e3b;
+  --gold: #fbbf24;
+  --bg-dark: #070d13;
+  --dialogue-bg: rgba(9, 18, 26, 0.94);
+  --border-color: rgba(52, 211, 153, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: #000;
+  color: #fff;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* =========================================================
+   1. PC 데스크톱 기본 뷰 (가로 16:9 꽉 찬 와이드)
+   ========================================================= */
+#gameViewport {
+  width: 100vw;
+  height: 100vh;
+  max-width: 1280px;
+  max-height: 720px;
+  aspect-ratio: 16 / 9;
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-dark);
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.95);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 타이틀 화면 */
+/* =========================================================
+   공용 타이틀 화면 및 텍스트 반응형 레이아웃
+   ========================================================= */
+#titleScreen {
+  position: absolute;
+  inset: 0;
+  /* PC 기본 배경: 가로 16:9 */
+  background-image: url('start_pic.png');
+  background-size: cover;
+  background-position: center center;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  z-index: 50;
+  transition: opacity 0.5s ease;
+}
+
+/* 하단 텍스트 가독성을 위한 그라데이션 오버레이 박스 */
+.title-container {
+  width: 100%;
+  max-width: 800px;
+  margin-bottom: 3vh;
+  padding: 30px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  background: linear-gradient(to top, rgba(7, 13, 19, 0.95) 0%, rgba(7, 13, 19, 0.6) 65%, transparent 100%);
+  border-radius: 20px 20px 0 0;
+  backdrop-filter: blur(4px);
+}
+
+/* 상단 작은 뱃지 */
+.title-badge {
+  display: inline-block;
+  font-size: clamp(0.75rem, 1.8vw, 0.95rem);
+  font-weight: 700;
+  color: var(--pine-glow);
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid var(--border-color);
+  padding: 4px 16px;
+  border-radius: 20px;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.5);
+}
+
+/* 메인 타이틀 */
+.title-main {
+  font-size: clamp(1.8rem, 4.5vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+  margin-bottom: 8px;
+  background: linear-gradient(180deg, #ffffff 30%, #34d399 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.8));
+  word-break: keep-all;
+}
+
+/* 보조 설명 문구 */
+.title-sub {
+  font-size: clamp(0.85rem, 2vw, 1.1rem);
+  color: #d1d5db;
+  font-weight: 500;
+  margin-bottom: 22px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+  word-break: keep-all;
+}
+
+/* 시작 버튼 */
+.press-start-btn {
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.9), rgba(16, 185, 129, 0.8));
+  border: 1.5px solid var(--pine-glow);
+  border-radius: 30px;
+  padding: 14px 36px;
+  color: #fff;
+  font-size: clamp(0.95rem, 2vw, 1.2rem);
+  font-weight: 800;
+  letter-spacing: 2px;
+  box-shadow: 0 0 20px rgba(52, 211, 153, 0.4);
+  cursor: pointer;
+  animation: pulseStart 1.8s infinite ease-in-out;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.press-start-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #059669, #10b981);
+}
+
+@keyframes pulseStart {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 15px rgba(52, 211, 153, 0.3);
+  }
+  50% {
+    transform: scale(1.03);
+    box-shadow: 0 0 25px rgba(52, 211, 153, 0.6);
+  }
+}
+
+/* 이름 입력 모달 */
+#nameModal {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  z-index: 60;
+}
+
+.modal-box {
+  background: var(--dialogue-bg);
+  border: 1.5px solid var(--pine-glow);
+  border-radius: 16px;
+  padding: 32px 28px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.3);
+}
+
+.modal-title {
+  color: var(--pine-glow);
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.modal-desc {
+  font-size: 0.9rem;
+  color: #9ca3af;
+  margin-bottom: 20px;
+}
+
+.name-input {
+  width: 100%;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid var(--border-color);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 18px;
+  outline: none;
+}
+
+.name-input:focus {
+  border-color: var(--pine-glow);
+  box-shadow: 0 0 10px rgba(52, 211, 153, 0.4);
+}
+
+.modal-btn {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  border: none;
+  width: 100%;
+  padding: 13px 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* =========================================================
+   인게임 뷰
+   ========================================================= */
+#gameplayScreen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 배경 레이어: 화면 전체를 시원하게 100% 꽉 채움 */
+.scene-background {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image 0.4s ease-in-out;
+  z-index: 1;
+}
+
+/* 상단 HUD */
+.game-hud {
+  position: relative;
+  z-index: 10;
+  padding: 16px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);
+}
+
+.hud-location {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gold);
+}
+
+.hud-stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.gauge-track {
+  width: 130px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.gauge-fill {
+  width: 0%;
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px #34d399;
+}
+
+/* 캐릭터 스탠딩 레이어 */
+.character-stage {
+  position: absolute;
+  inset: 0;
+  bottom: 210px;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  pointer-events: none;
+}
+
+.character-portrait {
+  height: 80%;
+  max-height: 480px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.7));
+}
+
+/* 하단 대화창 및 선택지 */
+.dialogue-wrapper {
+  position: relative;
+  z-index: 10;
+  padding: 0 24px 24px;
+  display: flex;
+  flex-direction: column;
+}
+
+.dialogue-box {
+  background: var(--dialogue-bg);
+  border: 1.5px solid var(--border-color);
+  border-radius: 14px;
+  padding: 22px 28px;
+  min-height: 150px;
+  backdrop-filter: blur(10px);
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+}
+
+.speaker-tag {
+  position: absolute;
+  top: -15px;
+  left: 28px;
+  background: #064e3b;
+  color: var(--pine-glow);
+  padding: 4px 18px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 800;
+  border: 1px solid var(--pine-glow);
+}
+
+.dialogue-text {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: #f3f4f6;
+  white-space: pre-line;
+  word-break: keep-all;
+}
+
+.dialogue-next-hint {
+  position: absolute;
+  bottom: 10px;
+  right: 18px;
+  font-size: 0.8rem;
+  color: var(--pine-glow);
+  animation: bounce 1s infinite alternate;
+}
+
+.choices-container {
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.choice-card {
+  background: rgba(14, 28, 38, 0.95);
+  border: 1.5px solid var(--pine-glow);
+  color: #fff;
+  padding: 14px 20px;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+}
+
+.choice-card:hover {
+  background: rgba(16, 185, 129, 0.25);
+  transform: translateX(6px);
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(4px); }
+}
+
+/* =========================================================
+   2. 모바일 (스마트폰 세로 화면 100% 풀스크린 꽉 차게)
+   ========================================================= */
+@media screen and (max-width: 768px), screen and (orientation: portrait) {
+  #titleScreen {
+    /* 모바일 접속 시 세로 9:16 사진으로 자동 교체 */
+    background-image: url('start_pic_m.png');
+    background-position: center center;
+  }
+
+  .title-container {
+    margin-bottom: 0;
+    padding: 30px 16px calc(35px + env(safe-area-inset-bottom));
+    border-radius: 16px 16px 0 0;
+  }
+
+  .press-start-btn {
+    width: 90%;
+    max-width: 320px;
+    padding: 13px 0;
+  }
+}
+
+  /* 💡 배경 사진이 위아래/좌우 전혀 잘리지 않고 전체 화면을 100% 꽉 채움 */
+  .scene-background {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center center;
+  }
+
+  /* 캐릭터 스탠딩을 모바일 대화창 바로 위로 알맞게 안착 */
+  .character-stage {
+    position: absolute;
+    inset: 0;
+    bottom: 220px;
+  }
+
+  .character-portrait {
+    height: 70%;
+    max-height: 360px;
+  }
+
+  /* 상단 HUD 모바일 최적화 */
+  .game-hud {
+    padding: 12px 16px;
+  }
+
+  .hud-location {
+    font-size: 0.85rem;
+    max-width: 58%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gauge-track {
+    width: 85px;
+    height: 10px;
+  }
+
+  /* 모바일 대화창 (하단에 깔끔하게 반투명 오버레이) */
+  .dialogue-wrapper {
+    padding: 0 14px calc(14px + env(safe-area-inset-bottom));
+  }
+
+  .dialogue-box {
+    min-height: 150px;
+    padding: 18px 16px 26px;
+    border-radius: 14px;
+  }
+
+  .speaker-tag {
+    top: -13px;
+    left: 16px;
+    font-size: 0.82rem;
+    padding: 3px 14px;
+  }
+
+  .dialogue-text {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .dialogue-next-hint {
+    font-size: 0.72rem;
+    bottom: 8px;
+    right: 14px;
+  }
+
+  .choices-container {
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .choice-card {
+    padding: 12px 14px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }

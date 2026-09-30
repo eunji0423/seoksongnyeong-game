@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>석송령과 수호자들: 천향리의 밤</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div id="gameViewport">
+
+    <!-- 1. 타이틀 화면 (반응형 텍스트 & 버튼) -->
+    <div id="titleScreen">
+      <div class="title-container">
+        <div class="title-badge">예천 설화 판타지 비주얼 노벨</div>
+        <h1 class="title-main">석송령과 수호자들</h1>
+        <p class="title-sub">천향리를 지키는 600년 신목의 부름에 응답하라</p>
+        <button class="press-start-btn" onclick="openNameModal()">
+          PRESS [START] TO BEGIN
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. 이름 입력 모달 -->
+    <div id="nameModal">
+      <div class="modal-box">
+        <h3 class="modal-title">17기 장학생 등록</h3>
+        <p class="modal-desc">예천의 지맥을 수호할 당신의 이름을 새겨주세요.</p>
+        <input 
+          type="text" 
+          id="nameInput" 
+          class="name-input" 
+          placeholder="이름 입력 (기본: 홍길동)" 
+          maxlength="6"
+          onkeydown="if(event.key === 'Enter') confirmName();"
+        />
+        <button class="modal-btn" onclick="confirmName()">천향리로 출발</button>
+      </div>
+    </div>
+
+    <!-- 3. 인게임 화면 -->
+    <div id="gameplayScreen">
+      <!-- 배경 레이어 -->
+      <div class="scene-background" id="sceneBg"></div>
+
+      <!-- 상단 HUD -->
+      <div class="game-hud">
+        <div class="hud-location">
+          <span>📍</span><span id="locationText">예천군 감천면 천향리</span>
+        </div>
+        <div class="hud-stats">
+          <span>영기(靈氣)</span>
+          <div class="gauge-track">
+            <div class="gauge-fill" id="gaugeFill"></div>
+          </div>
+          <span id="spiritValue" style="color: var(--pine-glow); font-weight: 800;">0</span>
+        </div>
+      </div>
+
+      <!-- 캐릭터 스탠딩 레이어 -->
+      <div class="character-stage">
+        <img id="charPortrait" class="character-portrait" src="" alt="캐릭터" style="display:none;" />
+      </div>
+
+      <!-- 하단 대화 및 선택지 UI -->
+      <div class="dialogue-wrapper">
+        <div class="choices-container" id="choicesBox"></div>
+
+        <div class="dialogue-box" id="dialogueBox" onclick="onDialogueClick()">
+          <div class="speaker-tag" id="speakerTag">시스템</div>
+          <div class="dialogue-text" id="dialogueText">게임을 준비 중입니다...</div>
+          <div class="dialogue-next-hint" id="nextHint">▼ CLICK TO CONTINUE</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let playerName = "홍길동";
+    let spiritPoints = 0;
+    let stepIndex = 0;
+    let isWaitingChoice = false;
+
+    // 실제 모바일 기기이거나 화면이 세로로 좁은 화면(스마트폰 세로 뷰)인지 실시간 감지
+    function checkIsMobile() {
+      const isTouchUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+      const isNarrowPortrait = window.innerWidth <= 768 && window.innerHeight > window.innerWidth;
+      return isTouchUserAgent || isNarrowPortrait;
+    }
+
+    // PC는 가로 원본(16:9), 모바일은 세로 버전(_m.png)을 동적으로 반환하는 getter 구조
+    const ASSETS = {
+      get bgForest() {
+        return checkIsMobile() ? "start_pic_m.png" : "start_pic.png";
+      },
+      get bgOffice() {
+        return checkIsMobile() ? "bg_office_m.png" : "bg_office.png";
+      },
+      get eventCollapse() {
+        return checkIsMobile() ? "event_collapse_m.png" : "event_collapse.png";
+      },
+      get itemPlaque() {
+        return checkIsMobile() ? "item_plaque_m.png" : "item_plaque.png";
+      },
+      get eventAwaken() {
+        return checkIsMobile() ? "event_awaken_m.png" : "event_awaken.png";
+      },
+      get eventAlarm() {
+        return checkIsMobile() ? "event_alarm_m.png" : "event_alarm.png";
+      },
+      get ch1Attack() {
+        return checkIsMobile() ? "choice1_attack_m.png" : "choice1_attack.png";
+      },
+      get ch1Dodge() {
+        return checkIsMobile() ? "choice1_dodge_m.png" : "choice1_dodge.png";
+      },
+      get ch2Talchum() {
+        return checkIsMobile() ? "choice2_talchum_m.png" : "choice2_talchum.png";
+      },
+      get ch2Boxing() {
+        return checkIsMobile() ? "choice2_boxing_m.png" : "choice2_boxing.png";
+      },
+      get ch3Strike() {
+        return checkIsMobile() ? "choice3_strike_m.png" : "choice3_strike.png";
+      },
+      get ch3Shuriken() {
+        return checkIsMobile() ? "choice3_shuriken_m.png" : "choice3_shuriken.png";
+      },
+
+      // 캐릭터 스탠딩
+      mentor: "mentor.png",
+      senior: "senior.png",
+      monster: "monster.png"
+    };
+
+    // 이미지 로드 시 엑스박스/멈춤 방지 함수
+    function setSafeBackground(elementId, imgUrl) {
+      const el = document.getElementById(elementId);
+      if (!el || !imgUrl) return;
+
+      const testImg = new Image();
+      testImg.src = imgUrl;
+      testImg.onload = () => {
+        el.style.backgroundImage = `url('${imgUrl}')`;
+      };
+      testImg.onerror = () => {
+        console.warn(`[이미지 로드 대기]: '${imgUrl}' 파일이 아직 없어 기본 배경을 유지합니다.`);
+      };
+    }
+
+    // 연출 스크립트 (getter 프로퍼티 사용으로 실행 시점 최신 이미지 적용)
+    function generateScript() {
+      return [
+        {
+          bg: () => ASSETS.bgForest,
+          loc: "예천군 감천면 천향리 석송령 길 (밤)",
+          speaker: () => playerName,
+          portrait: null,
+          text: "하아... 서울에서 이런 깡촌으로 강제 전학이라니.\n가로등도 드문드문하고 편의점 하나 가려면 한참을 걸어야 하잖아."
+        },
+        {
+          bg: () => ASSETS.itemPlaque,
+          loc: "품속의 목패",
+          speaker: () => playerName,
+          portrait: null,
+          text: "그나저나 예천고 입학하자마자 준 이 '석송령 장학패'는 대체 뭘까?\n600년 된 소나무가 세금을 내고 장학금을 준다더니... 나무 표면에 이상한 청록색 빛이 도는 것 같은데?"
+        },
+        {
+          bg: () => ASSETS.eventCollapse,
+          loc: "천향리 서낭당 돌탑 앞",
+          speaker: "시스템",
+          portrait: null,
+          text: "콰콰콰쾅—!!\n순간 땅이 진동하며 둘레길 옆 오래된 서낭당 돌탑이 산산조각 난다!\n갈라진 틈 사이로 불길한 흑염과 피비린내 나는 붉은 기운이 솟구쳐 오른다."
+        },
+        {
+          bg: () => ASSETS.eventCollapse,
+          loc: "서낭당 앞",
+          speaker: "붉은 눈의 괴수",
+          portrait: ASSETS.monster,
+          text: "크아아아아악—!! 600년의 봉인이 드디어 풀렸다... 인간의 피를 바쳐라!"
+        },
+        {
+          bg: () => ASSETS.eventAwaken,
+          loc: "각성의 순간",
+          speaker: () => playerName,
+          portrait: null,
+          text: "으악! 저건 또 뭐야?! 멧돼지...? 아니, 눈이 붉게 타오르고 있잖아!\n...어? 품속의 목패가 미친 듯이 진동하더니... 내 양손에 배추색 불꽃이 피어오른다?!"
+        },
+        {
+          isChoice: true,
+          choices: [
+            {
+              text: "솔잎 오라를 정권에 실어 전방으로 나선 일격을 날린다!",
+              gain: 25,
+              resultBg: () => ASSETS.ch1Attack,
+              resultText: () => `콰아앙!! ${playerName}의 주먹에서 뿜어져 나온 솔잎 회오리가 요괴의 뿔을 정면으로 분쇄했다! (영기 +25)`
+            },
+            {
+              text: "탈놀이 비틀걸음의 유연함으로 뒤로 몸을 날려 회피한다!",
+              gain: 15,
+              resultBg: () => ASSETS.ch1Dodge,
+              resultText: () => `슈우욱! ${playerName}은(는) 능청스러운 회피 춤사위로 요괴의 돌진 궤적을 아슬아슬하게 흘려보냈다! (영기 +15)`
+            }
+          ]
+        },
+        {
+          bg: () => ASSETS.bgForest,
+          loc: "서낭당 둘레길",
+          speaker: "의문의 학생",
+          portrait: ASSETS.senior,
+          text: "오호? 신입치고는 몸을 꽤 잘 쓰는데?\n어이, 멍하니 있지 말고 따라와. 놈의 본체가 완전히 깨어나기 전에 연구실로 피해야 해!"
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "예천고 뒤편 향토사 연구실",
+          speaker: "16기 선배 (민우)",
+          portrait: ASSETS.senior,
+          text: "어서 와라, 17기 임시 장학생.\n여기는 석송령의 정기를 연구하고 영남 지맥을 감시하는 향토사 연구실이야. 커피는 셀프다."
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "향토사 연구실",
+          speaker: "멘토 (조 교수)",
+          portrait: ASSETS.mentor,
+          text: () => `무사히 각성했구나, ${playerName}.\n석송령의 장학금은 단순한 돈이 아니다. 600년 신목이 자신의 영적 대리인을 선발하는 계약이지.\n이 땅의 악귀를 막으려면 우리 조상들의 신명 나는 '전통 연희' 몸짓을 깨우쳐야 한다.`
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "향토사 연구실",
+          speaker: "16기 선배 (민우)",
+          portrait: ASSETS.senior,
+          text: "말보단 스파링이지! 자, 주술 부채 칼바람 날아간다! 어디 한번 제대로 받아쳐 봐!"
+        },
+        {
+          isChoice: true,
+          choices: [
+            {
+              text: "턱을 치켜들고 양반탈의 너스레로 상체를 뒤로 젖혀 흘린다!",
+              gain: 35,
+              resultBg: () => ASSETS.ch2Talchum,
+              resultText: "스파파팟! 선배의 칼바람이 앞머리 한 올만 스치고 지나갔다! \n조 교수: '오호, 장단을 탈 줄 아는구나!' (영기 +35)"
+            },
+            {
+              text: "본능적으로 복싱 양손 가드를 올리고 버틴다!",
+              gain: 10,
+              resultBg: () => ASSETS.ch2Boxing,
+              resultText: () => `쿠웅!! 거센 바람에 밀려 연구실 바닥에 엉덩방아를 찧었다! \n선배: "힘으로 버티면 안 된다니까, ${playerName}!" (영기 +10)`
+            }
+          ]
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "향토사 연구실",
+          speaker: "16기 선배 (민우)",
+          portrait: ASSETS.senior,
+          text: () => `휴, 제법인데? 생각보다 몸이 굼뜨진 않네.\n자, 땀 닦고 저기 종이컵에 믹스커피나 한잔 타 와라, ${playerName}.`
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "향토사 연구실",
+          speaker: () => playerName,
+          portrait: null,
+          text: "하아... 훈련인지 고문인지 모르겠네. 근데 선배님, 방금 전부터 바닥이 미세하게 울리지 않아요?"
+        },
+        {
+          bg: () => ASSETS.eventAlarm,
+          loc: "향토사 연구실 (심야)",
+          speaker: "시스템",
+          portrait: null,
+          text: "쿠구구구구—!!\n순간 굉음과 함께 연구실 전체가 거칠게 요동친다!\n책장에 꽂힌 고서들이 우르르 쏟아지고, 벽에 붙은 감시 부적들이 푸른 불꽃을 뿜으며 타들어 간다."
+        },
+        {
+          bg: () => ASSETS.eventAlarm,
+          loc: "향토사 연구실 창가",
+          speaker: "멘토 (조 교수)",
+          portrait: ASSETS.mentor,
+          text: "창밖을 보거라! 석송령의 푸른 솔잎 빛이 검붉은 사기에 짓눌리고 있다!\n단순한 잡귀가 아니야... 놈들이 마침내 본체의 뿌리에 결계 파괴 주술을 꽂아 넣었어!"
+        },
+        {
+          bg: () => ASSETS.eventAlarm,
+          loc: "향토사 연구실",
+          speaker: "16기 선배 (민우)",
+          portrait: ASSETS.senior,
+          text: () => `쳇, 생각보다 침입이 빠르잖아! ${playerName}, 신발 끈 꽉 묶어!\n여기서 본체 당산나무까지 전력 질주다!`
+        },
+        {
+          bg: () => ASSETS.bgForest,
+          loc: "천향리 들판 ➔ 석송령 본체로 향하는 길",
+          speaker: () => playerName,
+          portrait: null,
+          text: "차가운 밤공기를 가르며 어둠 속을 달린다.\n가까워질수록 귓가를 때리는 거센 바람 소리와 땅이 갈라지는 불길한 굉음... 마침내 나무 앞에 도착했다!"
+        },
+        {
+          bg: () => ASSETS.eventCollapse,
+          loc: "석송령 본체 앞 (자정)",
+          speaker: "흑막 술사",
+          portrait: null,
+          text: "크하하하! 늦었구나! 600년간 이 땅의 지맥을 통제하던 신목도 오늘 밤 내 제물이 될 뿐이다!"
+        },
+        {
+          bg: () => ASSETS.eventCollapse,
+          loc: "석송령 본체 앞",
+          speaker: "16기 선배 (민우)",
+          portrait: ASSETS.senior,
+          text: () => `악귀들이 뿌리 주변을 완전히 포위했어! ${playerName}, 내가 주술 결계로 놈들의 발을 묶을 테니 네가 단숨에 파고들어 술사의 결계 핵을 깨부숴!`
+        },
+        {
+          bg: () => ASSETS.eventAwaken,
+          loc: "석송령 본체 앞",
+          speaker: () => playerName,
+          portrait: null,
+          text: "품속의 목패가 뜨겁게 달아오르며 600년 노송의 분노가 온몸을 타고 흐른다.\n지금이야말로 승부를 볼 때다!"
+        },
+        {
+          isChoice: true,
+          choices: [
+            {
+              text: "꽹과리 휘모리장단에 맞춰 공중 도약 회전 배김새로 결계 핵을 내려찍는다!",
+              gain: 40,
+              resultBg: () => ASSETS.ch3Strike,
+              resultText: "콰지지직— 쾅!! 허공을 가르는 신명 나는 몸짓과 솔잎 태풍이 흑막의 결계를 산산조각 냈다! (영기 +40)"
+            },
+            {
+              text: "선배의 부적 방패 뒤로 엄호하며 원거리 솔잎 수리검을 난사한다!",
+              gain: 20,
+              resultBg: () => ASSETS.ch3Shuriken,
+              resultText: "슈슈슉! 적의 주술 도끼를 맞춰 튕겨냈으나, 선배의 결계에 금이 가며 아슬아슬하게 방어 성공! (영기 +20)"
+            }
+          ]
+        },
+        {
+          bg: () => ASSETS.bgOffice,
+          loc: "고요해진 천향리 연구실",
+          speaker: "멘토 (조 교수)",
+          portrait: ASSETS.mentor,
+          text: () => `새벽이 밝았군. ${playerName}, 네 목패를 확인해 보거라.`
+        },
+        {
+          isEnding: true
+        }
+      ];
+    }
+
+    let script = [];
+
+    function openNameModal() {
+      document.getElementById("nameModal").style.display = "flex";
+      document.getElementById("nameInput").focus();
+    }
+
+    function confirmName() {
+      const input = document.getElementById("nameInput").value.trim();
+      playerName = input !== "" ? input : "홍길동";
+      
+      document.getElementById("nameModal").style.display = "none";
+      const title = document.getElementById("titleScreen");
+      title.style.opacity = "0";
+      setTimeout(() => {
+        title.style.display = "none";
+        script = generateScript();
+        loadStep(0);
+      }, 500);
+    }
+
+    function updateGauge() {
+      const fill = document.getElementById("gaugeFill");
+      const val = document.getElementById("spiritValue");
+      fill.style.width = Math.min(spiritPoints, 100) + "%";
+      val.innerText = spiritPoints;
+    }
+
+    function loadStep(idx) {
+      stepIndex = idx;
+      if (stepIndex >= script.length) return;
+
+      const item = script[stepIndex];
+      const choicesBox = document.getElementById("choicesBox");
+      const dialogueBox = document.getElementById("dialogueBox");
+
+      if (item.isEnding) {
+        showEndingScreen();
+        return;
+      }
+
+      if (item.isChoice) {
+        isWaitingChoice = true;
+        choicesBox.style.display = "flex";
+        choicesBox.innerHTML = "";
+        dialogueBox.style.pointerEvents = "none";
+        document.getElementById("nextHint").style.display = "none";
+
+        item.choices.forEach(ch => {
+          const btn = document.createElement("div");
+          btn.className = "choice-card";
+          btn.innerHTML = `<span>${ch.text}</span><span style="color:var(--pine-glow); font-size:0.85rem;">[선택]</span>`;
+          btn.onclick = () => {
+            spiritPoints += ch.gain;
+            updateGauge();
+            choicesBox.style.display = "none";
+            dialogueBox.style.pointerEvents = "auto";
+            document.getElementById("nextHint").style.display = "block";
+            isWaitingChoice = false;
+
+            const targetBg = typeof ch.resultBg === "function" ? ch.resultBg() : ch.resultBg;
+            if (targetBg) {
+              setSafeBackground("sceneBg", targetBg);
+            }
+            document.getElementById("charPortrait").style.display = "none";
+            document.getElementById("speakerTag").innerText = "판정 결과";
+            document.getElementById("dialogueText").innerText = typeof ch.resultText === "function" ? ch.resultText() : ch.resultText;
+
+            // ❌ 기존: stepIndex++;  <-- 이 줄을 삭제하거나 주석 처리하세요!
+          };
+          choicesBox.appendChild(btn);
+        });
+        return;
+      }
+
+      choicesBox.style.display = "none";
+      dialogueBox.style.pointerEvents = "auto";
+      document.getElementById("nextHint").style.display = "block";
+
+      const bgUrl = typeof item.bg === "function" ? item.bg() : item.bg;
+      if (bgUrl) setSafeBackground("sceneBg", bgUrl);
+
+      if (item.loc) document.getElementById("locationText").innerText = item.loc;
+      
+      const speakerName = typeof item.speaker === "function" ? item.speaker() : item.speaker;
+      document.getElementById("speakerTag").innerText = speakerName || "시스템";
+      
+      const textContent = typeof item.text === "function" ? item.text() : item.text;
+      document.getElementById("dialogueText").innerText = textContent;
+
+      const portraitImg = document.getElementById("charPortrait");
+      if (item.portrait) {
+        portraitImg.src = item.portrait;
+        portraitImg.style.display = "block";
+      } else {
+        portraitImg.style.display = "none";
+      }
+    }
+
+    function onDialogueClick() {
+      if (isWaitingChoice) return;
+      stepIndex++;
+      if (stepIndex < script.length) {
+        loadStep(stepIndex);
+      }
+    }
+
+    function showEndingScreen() {
+      document.getElementById("choicesBox").style.display = "none";
+      document.getElementById("nextHint").style.display = "none";
+      document.getElementById("charPortrait").style.display = "none";
+      setSafeBackground("sceneBg", ASSETS.itemPlaque);
+
+      let rankTitle = "";
+      let rankDesc = "";
+
+      if (spiritPoints >= 80) {
+        rankTitle = "S등급: 17기 정식 수호자 임명";
+        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령의 푸른 솔잎이 흩날리며 목패에 금빛으로 '${playerName}' 세 글자가 깊게 각인되었습니다.\n\n멘토 조 교수: "합격이다. 너야말로 예천의 지맥을 지탱할 17기 수호자다!"\n선배 민우: "축하한다 후배님. 다음 주 안동 학회 답사도 같이 가야지?"\n${playerName}: "...네? 공부도 시키는 겁니까?!"\n\n— 석송령과 수호자들 Season 1 완결 —`;
+      } else {
+        rankTitle = "A등급: 천향리 수련생 기간 연장";
+        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령을 지키긴 했으나 탈춤 춤사위가 다소 뻣뻣했습니다.\n\n멘토 조 교수: "장학금은 유지되지만 ${playerName}, 내일부터 새벽 5시에 탈춤 오금뛰기 200회 추가다!"\n${playerName}: "살려주세요..."\n\n— 석송령과 수호자들 Season 1 완결 —`;
+      }
+
+      document.getElementById("speakerTag").innerText = "수호자 자격 판정";
+      document.getElementById("dialogueText").innerText = `${rankTitle}\n\n${rankDesc}`;
+
+      const choicesBox = document.getElementById("choicesBox");
+      choicesBox.style.display = "flex";
+      choicesBox.innerHTML = `
+        <div class="choice-card" onclick="location.reload()" style="justify-content:center; background: #064e3b;">
+          <span>처음부터 다시 플레이하기</span>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
