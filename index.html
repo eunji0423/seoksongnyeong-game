@@ -10,6 +10,18 @@
 
   <div id="gameViewport">
 
+    <!-- 0. 리소스 로딩 화면 (신규 추가) -->
+    <div id="loadingScreen">
+      <div class="loading-box">
+        <div class="loading-spinner"></div>
+        <div class="loading-title">천향리의 기운을 모으는 중...</div>
+        <div class="loading-track">
+          <div id="loadingBar" class="loading-fill"></div>
+        </div>
+        <div id="loadingProgress" class="loading-text">0%</div>
+      </div>
+    </div>
+
     <!-- 1. 타이틀 화면 (반응형 텍스트 & 버튼) -->
     <div id="titleScreen">
       <div class="title-container">
@@ -78,10 +90,8 @@
   </div>
     
   <script>
-    // 이미지 사전 로딩 (캐싱) 함수
-    function preloadImages() {
-      // 기기에 맞는 이미지 목록 추출
-      const imagesToPreload = [
+    function preloadAllAssets() {
+      const imagesToLoad = [
         ASSETS.bgForest,
         ASSETS.bgOffice,
         ASSETS.eventCollapse,
@@ -97,18 +107,54 @@
         ASSETS.mentor,
         ASSETS.senior,
         ASSETS.monster
-      ];
+      ].filter(Boolean); // 유효한 경로만 필터링
 
-      imagesToPreload.forEach(src => {
-        if (src) {
-          const img = new Image();
-          img.src = src;
+      let loadedCount = 0;
+      const totalImages = imagesToLoad.length;
+      const loadingScreen = document.getElementById("loadingScreen");
+      const loadingBar = document.getElementById("loadingBar");
+      const loadingProgress = document.getElementById("loadingProgress");
+      const titleScreen = document.getElementById("titleScreen");
+
+      function updateProgress() {
+        loadedCount++;
+        const percent = Math.floor((loadedCount / totalImages) * 100);
+        if (loadingBar) loadingBar.style.width = percent + "%";
+        if (loadingProgress) loadingProgress.innerText = percent + "%";
+
+        // 전체 다운로드 완료 시 로딩 화면 닫고 타이틀 화면 등장
+        if (loadedCount >= totalImages) {
+          setTimeout(() => {
+            if (loadingScreen) {
+              loadingScreen.style.opacity = "0";
+              setTimeout(() => {
+                loadingScreen.style.display = "none";
+                if (titleScreen) {
+                  titleScreen.style.display = "flex";
+                  setTimeout(() => {
+                    titleScreen.style.opacity = "1";
+                  }, 50);
+                }
+              }, 400);
+            }
+          }, 300);
         }
+      }
+
+      // 각 이미지를 백그라운드에서 다운로드
+      imagesToLoad.forEach(src => {
+        const img = new Image();
+        img.onload = updateProgress;
+        img.onerror = () => {
+          console.warn(`[에셋 로드 실패 또는 누락]: ${src}`);
+          updateProgress(); // 파일이 없더라도 게임이 멈추지 않도록 카운트 진행
+        };
+        img.src = src;
       });
     }
 
-    // 페이지 접속 즉시 백그라운드 다운로드 시작
-    window.addEventListener("DOMContentLoaded", preloadImages);
+    // 페이지 진입 즉시 로딩 시작
+    window.addEventListener("DOMContentLoaded", preloadAllAssets);
 
 
     let playerName = "홍길동";
