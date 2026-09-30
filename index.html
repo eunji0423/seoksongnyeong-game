@@ -106,7 +106,8 @@
         ASSETS.ch3Shuriken,
         ASSETS.mentor,
         ASSETS.senior,
-        ASSETS.monster
+        ASSETS.monster,
+        ASSETS.monster_boss
       ].filter(Boolean); // 유효한 경로만 필터링
 
       let loadedCount = 0;
@@ -196,7 +197,7 @@
         return checkIsMobile() ? "choice1_dodge_m.png" : "choice1_dodge.png";
       },
       get ch2Talchum() {
-        return checkIsMobile() ? "choice2_talchum_m.png" : "choice2_talchum.png";
+        return checkIsMobile() ? "choice2_talchum_m.jpg" : "choice2_talchum.jpg";
       },
       get ch2Boxing() {
         return checkIsMobile() ? "choice2_boxing_m.png" : "choice2_boxing.png";
@@ -211,7 +212,8 @@
       // 캐릭터 스탠딩
       mentor: "mentor.png",
       senior: "senior.png",
-      monster: "monster.png"
+      monster: "monster.png",
+      monsterBoss: "monster_boss.png"
     };
 
     // 이미지 로드 시 엑스박스/멈춤 방지 함수
@@ -294,21 +296,21 @@
         {
           bg: () => ASSETS.bgOffice,
           loc: "예천고 뒤편 향토사 연구실",
-          speaker: "16기 선배 (민우)",
+          speaker: "16기 선배 (수홍)",
           portrait: ASSETS.senior,
           text: "어서 와라, 17기 임시 장학생.\n여기는 석송령의 정기를 연구하고 영남 지맥을 감시하는 향토사 연구실이야. 커피는 셀프다."
         },
         {
           bg: () => ASSETS.bgOffice,
           loc: "향토사 연구실",
-          speaker: "멘토 (조 교수)",
+          speaker: "교수 김형근",
           portrait: ASSETS.mentor,
           text: () => `무사히 각성했구나, ${playerName}.\n석송령의 장학금은 단순한 돈이 아니다. 600년 신목이 자신의 영적 대리인을 선발하는 계약이지.\n이 땅의 악귀를 막으려면 우리 조상들의 신명 나는 '전통 연희' 몸짓을 깨우쳐야 한다.`
         },
         {
           bg: () => ASSETS.bgOffice,
           loc: "향토사 연구실",
-          speaker: "16기 선배 (민우)",
+          speaker: "16기 선배 (수홍))",
           portrait: ASSETS.senior,
           text: "말보단 스파링이지! 자, 주술 부채 칼바람 날아간다! 어디 한번 제대로 받아쳐 봐!"
         },
@@ -319,7 +321,7 @@
               text: "턱을 치켜들고 양반탈의 너스레로 상체를 뒤로 젖혀 흘린다!",
               gain: 35,
               resultBg: () => ASSETS.ch2Talchum,
-              resultText: "스파파팟! 선배의 칼바람이 앞머리 한 올만 스치고 지나갔다! \n조 교수: '오호, 장단을 탈 줄 아는구나!' (영기 +35)"
+              resultText: "스파파팟! 선배의 칼바람이 앞머리 한 올만 스치고 지나갔다! \n교수: '오호, 장단을 탈 줄 아는구나!' (영기 +35)"
             },
             {
               text: "본능적으로 복싱 양손 가드를 올리고 버틴다!",
@@ -332,7 +334,7 @@
         {
           bg: () => ASSETS.bgOffice,
           loc: "향토사 연구실",
-          speaker: "16기 선배 (민우)",
+          speaker: "16기 선배 (수홍)",
           portrait: ASSETS.senior,
           text: () => `휴, 제법인데? 생각보다 몸이 굼뜨진 않네.\n자, 땀 닦고 저기 종이컵에 믹스커피나 한잔 타 와라, ${playerName}.`
         },
@@ -353,14 +355,14 @@
         {
           bg: () => ASSETS.eventAlarm,
           loc: "향토사 연구실 창가",
-          speaker: "멘토 (조 교수)",
+          speaker: "교수 김형근",
           portrait: ASSETS.mentor,
           text: "창밖을 보거라! 석송령의 푸른 솔잎 빛이 검붉은 사기에 짓눌리고 있다!\n단순한 잡귀가 아니야... 놈들이 마침내 본체의 뿌리에 결계 파괴 주술을 꽂아 넣었어!"
         },
         {
           bg: () => ASSETS.eventAlarm,
           loc: "향토사 연구실",
-          speaker: "16기 선배 (민우)",
+          speaker: "16기 선배 (수홍)",
           portrait: ASSETS.senior,
           text: () => `쳇, 생각보다 침입이 빠르잖아! ${playerName}, 신발 끈 꽉 묶어!\n여기서 본체 당산나무까지 전력 질주다!`
         },
@@ -375,13 +377,13 @@
           bg: () => ASSETS.eventCollapse,
           loc: "석송령 본체 앞 (자정)",
           speaker: "흑막 술사",
-          portrait: null,
+          portrait: ASSETS.monsterBoss,
           text: "크하하하! 늦었구나! 600년간 이 땅의 지맥을 통제하던 신목도 오늘 밤 내 제물이 될 뿐이다!"
         },
         {
           bg: () => ASSETS.eventCollapse,
           loc: "석송령 본체 앞",
-          speaker: "16기 선배 (민우)",
+          speaker: "16기 선배 (수홍)",
           portrait: ASSETS.senior,
           text: () => `악귀들이 뿌리 주변을 완전히 포위했어! ${playerName}, 내가 주술 결계로 놈들의 발을 묶을 테니 네가 단숨에 파고들어 술사의 결계 핵을 깨부숴!`
         },
@@ -412,7 +414,7 @@
         {
           bg: () => ASSETS.bgOffice,
           loc: "고요해진 천향리 연구실",
-          speaker: "멘토 (조 교수)",
+          speaker: "교수 김형근",
           portrait: ASSETS.mentor,
           text: () => `새벽이 밝았군. ${playerName}, 네 목패를 확인해 보거라.`
         },
@@ -529,21 +531,31 @@
       }
     }
 
+    // 입력받은 이름의 길이에 따라 한글 수사를 반환하는 함수
+    function getKoreanCountWord(count) {
+      const words = ["영", "한", "두", "세", "네", "다섯", "여섯", "일곱", "여덟", "아홉", "열"];
+      return words[count] ? `${words[count]} 글자` : `${count}글자`;
+    }
+
     function showEndingScreen() {
       document.getElementById("choicesBox").style.display = "none";
       document.getElementById("nextHint").style.display = "none";
       document.getElementById("charPortrait").style.display = "none";
       setSafeBackground("sceneBg", ASSETS.itemPlaque);
 
+      // 💡 공백을 제외한 순수 글자 수를 계산해 "두 글자", "세 글자" 등으로 변환
+      const nameLength = playerName.replace(/\s+/g, "").length;
+      const countText = getKoreanCountWord(nameLength);
+
       let rankTitle = "";
       let rankDesc = "";
 
       if (spiritPoints >= 80) {
         rankTitle = "S등급: 17기 정식 수호자 임명";
-        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령의 푸른 솔잎이 흩날리며 목패에 금빛으로 '${playerName}' 세 글자가 깊게 각인되었습니다.\n\n멘토 조 교수: "합격이다. 너야말로 예천의 지맥을 지탱할 17기 수호자다!"\n선배 민우: "축하한다 후배님. 다음 주 안동 학회 답사도 같이 가야지?"\n${playerName}: "...네? 공부도 시키는 겁니까?!"\n\n— 석송령과 수호자들 Season 1 완결 —`;
+        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령의 푸른 솔잎이 흩날리며 목패에 금빛으로 '${playerName}' ${countText}가 깊게 각인되었습니다.\n\n교수 김형근: "합격이다. 너야말로 예천의 지맥을 지탱할 17기 수호자다!"\n선배 수홍: "축하한다 후배님. 다음 주 안동 학회 답사도 같이 가야지?"\n${playerName}: "...네? 공부도 시키는 겁니까?!"\n\n— 석송령과 수호자들 Season 1 완결 —`;
       } else {
         rankTitle = "A등급: 천향리 수련생 기간 연장";
-        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령을 지키긴 했으나 탈춤 춤사위가 다소 뻣뻣했습니다.\n\n멘토 조 교수: "장학금은 유지되지만 ${playerName}, 내일부터 새벽 5시에 탈춤 오금뛰기 200회 추가다!"\n${playerName}: "살려주세요..."\n\n— 석송령과 수호자들 Season 1 완결 —`;
+        rankDesc = `[최종 누적 영기: ${spiritPoints}점]\n\n석송령을 지키긴 했으나 탈춤 춤사위가 다소 뻣뻣했습니다.\n\n교수 김형근: "장학금은 유지되지만 ${playerName}, 내일부터 새벽 5시에 탈춤 오금뛰기 200회 추가다!"\n${playerName}: "살려주세요..."\n\n— 석송령과 수호자들 Season 1 완결 —`;
       }
 
       document.getElementById("speakerTag").innerText = "수호자 자격 판정";
