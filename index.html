@@ -76,8 +76,41 @@
     </div>
 
   </div>
-
+    
   <script>
+    // 이미지 사전 로딩 (캐싱) 함수
+    function preloadImages() {
+      // 기기에 맞는 이미지 목록 추출
+      const imagesToPreload = [
+        ASSETS.bgForest,
+        ASSETS.bgOffice,
+        ASSETS.eventCollapse,
+        ASSETS.itemPlaque,
+        ASSETS.eventAwaken,
+        ASSETS.eventAlarm,
+        ASSETS.ch1Attack,
+        ASSETS.ch1Dodge,
+        ASSETS.ch2Talchum,
+        ASSETS.ch2Boxing,
+        ASSETS.ch3Strike,
+        ASSETS.ch3Shuriken,
+        ASSETS.mentor,
+        ASSETS.senior,
+        ASSETS.monster
+      ];
+
+      imagesToPreload.forEach(src => {
+        if (src) {
+          const img = new Image();
+          img.src = src;
+        }
+      });
+    }
+
+    // 페이지 접속 즉시 백그라운드 다운로드 시작
+    window.addEventListener("DOMContentLoaded", preloadImages);
+
+
     let playerName = "홍길동";
     let spiritPoints = 0;
     let stepIndex = 0;
